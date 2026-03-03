@@ -1,79 +1,103 @@
-# Claude Skill: XSLT UI Pipeline
+# XML-XSLT UI Generation Pipeline for AI
 
-This folder contains a Claude skill that lets you build and edit this site using natural language — just describe what you want and Claude handles the XML and XSLT changes correctly.
+A powerful, deterministic pipeline for getting AI agents to accurately generate and iterate on User Interfaces without breaking styling.
 
-## What is a Claude skill?
+---
 
-A skill is a small knowledge bundle that gets loaded into Claude's context when you're working on a relevant task. This one teaches Claude about the ai-ui-xslt-pipeline architecture: the component vocabulary, the design token system, which file to edit for which kind of change, and how to extend the renderer with new components. Without it, Claude will usually produce working output but may bypass the design system (e.g. hardcoding colors instead of using `var(--color-terra)`).
+## The Problem
 
-## Installing the skill
+When asking an AI to design or modify a UI using raw HTML and CSS (especially with complex design systems or grid frameworks), the AI often breaks the layout. HTML and CSS are structurally flexible and visually ambiguous to an AI — it's hard for the model to perfectly "see" how its code maps to the visual output, leading to cascading layout errors during iteration.
 
-You need [Claude desktop](https://claude.ai/download) with **Cowork mode** enabled (currently in beta).
+## The Inspiration
 
-1. Download `xslt-ui-pipeline.skill`
-2. Double-click it — Claude installs it automatically
-3. That's it
+Based on an insight from [Mark Essien's tweet](https://twitter.com/markessien):
 
-## Using the skill
+> *"This is incredible. It looks like a simple screenshot of an app, but it's not. It's XML with XSLT, an almost deprecated technology, but this is how you can get AI to see how your pages look... I made it first generate a bunch of XML files fully describing the UI and what it sees in there. XML is deterministic — it's not like CSS or HTML... And I found out today that there is this old tech called XSLT that allows you render the XML in a browser, so you can also view it."*
 
-Once installed, the skill triggers automatically whenever you're working on the pipeline. Just describe what you want in plain language:
+## The Solution
 
-> *"Add a Recent Messages section to the dashboard. Each message should show a sender name, a short preview, and the time."*
+Instead of forcing the AI to write HTML/CSS, we ask it to generate XML. XML is strict, formal, and highly deterministic. We then map those logical XML elements to our complex HTML/CSS rules using an XSLT (eXtensible Stylesheet Language Transformations) file.
+
+## How it Works
+
+1. **Define the structure in XML** — the AI writes logical representations of the data and structure (e.g. `<AvatarRow>`, `<Card time="9am">`).
+2. **Link the XSLT Renderer** — the XML file includes an `<?xml-stylesheet?>` directive pointing to `ui-renderer.xslt`.
+3. **Native Browser Transformation** — when you open the XML file in a browser, the browser's native engine applies the XSLT stylesheet and renders the intended HTML/CSS UI in real-time. No build step needed.
+
+## Benefits
+
+**Perfect AI iteration** — the AI can iterate strictly on the deterministic XML data structure (e.g. adding a new `<User>`) without ever touching — and risking breaking — the CSS grid or design tokens.
+
+**Formal verification** — once the logical XML structure is perfected through iteration, you can then (if you choose) formalize the adoption into your actual frontend code (React, Vue, etc).
+
+---
+
+## Demo
+
+This repository contains a simple proof-of-concept.
+
+**Files:**
+
+| File | Role |
+|------|------|
+| `ui.xml` | The strict, AI-friendly UI representation |
+| `ui-renderer.xslt` | The stylesheet mapping custom XML tags into standard HTML and CSS |
+| `preview.html` | A simple wrapper iframe to view the result, simulating an app view |
+
+**How to run:**
+
+1. Clone this repository
+2. Start a local web server in the directory:
+   ```
+   python3 -m http.server
+   ```
+   > Note: Opening via `file://` directly may be blocked by browser CORS constraints when loading the external XSLT file.
+3. Open `http://localhost:8000/preview.html` or `http://localhost:8000/ui.xml` in your browser
+
+---
+
+## Using with Claude
+
+A Claude skill is included in the `claude-skill/` folder. It encodes the component vocabulary, design token system, and XSLT patterns for this pipeline — so you can build and iterate on the UI using plain language, and Claude will get the files right the first time.
+
+**How it works:**
+
+Without the skill, Claude has no idea your project uses an XML-first pipeline, what components exist, or that there's a design token system to respect. It has to guess — and it often gets things mostly right but with subtle mistakes, like hardcoding `#3b82f6` instead of `var(--color-terra)`.
+
+The skill fixes this by front-loading Claude with exactly what it needs to know before it starts:
+
+```
+You type:  "Add a Recent Messages section"
+               ↓
+Claude sees: "this is an xslt-ui-pipeline task"
+               ↓
+Skill loads: component vocabulary, design tokens,
+             current ui.xml, XSLT patterns
+               ↓
+Claude edits: ui.xml and/or ui-renderer.xslt
+              correctly, first time
+```
+
+**Install:**
+
+1. Download [`claude-skill/xslt-ui-pipeline.skill`](claude-skill/xslt-ui-pipeline.skill)
+2. Double-click it — Claude desktop installs it automatically
+3. [Claude desktop](https://claude.ai/download) with **Cowork mode** is required (currently in beta)
+
+**Then just describe what you want:**
+
+> *"Add a Recent Messages section — sender name, short preview, and time sent"*
 
 > *"Change the accent color from blue to warm coral"*
 
-> *"Add a row of stat boxes showing steps, calories, and sleep"*
+> *"Add stat boxes for steps, calories, and sleep"*
 
-Claude will produce the correctly updated `ui.xml` and/or `ui-renderer.xslt` — with proper XML structure, new XSLT templates, and CSS that uses the existing design tokens.
+Claude produces correctly structured XML and XSLT — new components use `var(--color-terra)` and the existing design tokens rather than hardcoding values, keeping the design system intact as you iterate.
 
-## What the skill knows
+See [`claude-skill/README.md`](claude-skill/README.md) for full details, component vocabulary, and instructions for adapting the skill to your own pipeline.
 
-**Component vocabulary** — all the XML building blocks:
+---
 
-| Element | What it renders |
-|---------|----------------|
-| `<Screen title="...">` | Root wrapper for a screen |
-| `<AvatarRow>` | Horizontally scrollable user avatar row |
-| `<User name="..." avatarUrl="..." notification="true/false">` | Single avatar with optional notification dot |
-| `<Section title="..." action="...">` | Content section with optional action link |
-| `<CardList>` | Vertical list container for cards |
-| `<Card time="..." title="..." location="...">` | Individual card item |
+## License
 
-**Design tokens** — the CSS custom properties that control the visual system:
-
-```css
---color-terra: #3b82f6      /* accent color — borders, links, dots */
---color-bg: #ffffff
---color-ink: #6b7280        /* muted text */
---color-ink-dark: #374151   /* body text */
---color-ink-darkest: #111827 /* headings */
---font-primary: 'Inter'
---font-mono: ui-monospace   /* labels, times, uppercase tags */
-```
-
-**Which file to edit:**
-- Content changes → `ui.xml` only
-- Visual/style changes → `ui-renderer.xslt` only
-- New component types → both files
-
-**XSLT 1.0 patterns** for adding new components (conditionals, dynamic attributes, child iteration, conditional class names).
-
-## How it was built
-
-The skill was created using [Claude's skill-creator tool](https://claude.ai). It was tested against three scenarios:
-
-1. **Adding a new component type** (Recent Messages section) — verifying it preserves the XML processing instruction, creates proper XSLT templates, and adds matching CSS
-2. **Visual-only changes** (accent color swap) — verifying it touches only the XSLT and uses the single `--color-terra` variable
-3. **New component with design system compliance** (Stats row) — verifying new CSS uses `var(--color-terra)` and `var(--font-mono)` rather than hardcoded values
-
-The skill scored 100% on all assertions vs 91.7% without it, with the key difference being design token adherence in new components.
-
-## Adapting the skill for your own pipeline
-
-The skill is open — you can read and edit `SKILL.md` inside the `.skill` file (it's just a zip). To fork it for your own XSLT pipeline:
-
-1. Unzip the `.skill` file
-2. Update the component vocabulary table in `SKILL.md` to match your elements
-3. Update the design token list
-4. Update the "Current ui.xml" section with your baseline file
-5. Re-zip and rename to `your-skill-name.skill`
+MIT
