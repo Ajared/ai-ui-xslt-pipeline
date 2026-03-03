@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ui-renderer.xslt"?>
+<Screen title="Dashboard">
+  <AvatarRow>
+    <User name="Sally" notification="true" avatarUrl="https://i.pravatar.cc/150?u=sally" />
+    <User name="Rasmun" notification="false" avatarUrl="https://i.pravatar.cc/150?u=rasmun" />
+    <User name="John" notification="false" avatarUrl="https://i.pravatar.cc/150?u=john" />
+    <User name="Masha" notification="false" avatarUrl="https://i.pravatar.cc/150?u=masha" />
+  </AvatarRow>
+  <Section title="Appointments today">
+    <CardList>
+      <Card time="9am" title="Doctor" location="Medical Center" />
+      <Card time="11am" title="Meeting with Rasmun" location="Coffee House" />
+    </CardList>
+  </Section>
+  <Section title="Latest Posts" action="View all">
+  </Section>
+</Screen>
