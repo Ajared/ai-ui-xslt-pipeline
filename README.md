@@ -10,7 +10,7 @@ When asking an AI to design or modify a UI using raw HTML and CSS (especially wi
 
 ## The Inspiration
 
-Based on an insight from [Mark Essien's tweet](https://twitter.com/markessien):
+Based on an insight from [Mark Essien's tweet](https://x.com/markessien/status/2028716745150673334?s=20):
 
 > *"This is incredible. It looks like a simple screenshot of an app, but it's not. It's XML with XSLT, an almost deprecated technology, but this is how you can get AI to see how your pages look... I made it first generate a bunch of XML files fully describing the UI and what it sees in there. XML is deterministic — it's not like CSS or HTML... And I found out today that there is this old tech called XSLT that allows you render the XML in a browser, so you can also view it."*
 
